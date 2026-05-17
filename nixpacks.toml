@@ -1,0 +1,20 @@
+# Configuration Nixpacks pour Railway
+# https://nixpacks.com
+
+[phases.setup]
+nixPkgs = ["php83", "php83Packages.composer", "nodejs_20", "npm"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction",
+    "npm ci --prefer-offline"
+]
+
+[phases.build]
+cmds = [
+    "npm run build",
+    "chmod -R 775 storage bootstrap/cache"
+]
+
+[start]
+cmd = "bash start.sh"
