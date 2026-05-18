@@ -1,0 +1,48 @@
+name: Build & Deploy Campus Manager
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.title=Campus Manager
+            org.opencontainers.image.description=Gestion des étudiants universitaires
+
+      - name: Notify Railway to redeploy
+        run: |
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceDeploy(environmentId: \\\"600190c2-09ad-4d86-9078-8f5bea851241\\\", serviceId: \\\"bb866fc7-2b60-4f46-b77f-158ed2af5346\\\") }\"}"
+          echo "Railway deployment triggered"
