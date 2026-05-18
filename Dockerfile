@@ -2,10 +2,10 @@ FROM php:8.4-cli
 
 # Dépendances système
 RUN apt-get update && apt-get install -y \
-    git curl unzip libzip-dev libpng-dev libonig-dev \
+    git curl unzip libzip-dev libonig-dev \
     libxml2-dev libsqlite3-dev sqlite3 \
     && docker-php-ext-install \
-        pdo pdo_sqlite zip mbstring xml bcmath tokenizer ctype \
+        pdo_sqlite zip mbstring xml bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
